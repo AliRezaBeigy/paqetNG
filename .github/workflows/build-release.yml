@@ -1,0 +1,120 @@
+name: Build and Release
+
+on:
+  push:
+    branches: [main, master]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      # Dependencies for building paqet (Go + CGO + libpcap)
+      - name: Install paqet build dependencies
+        run: sudo apt-get update && sudo apt-get install -y flex bison autoconf automake libtool
+
+      # Use pre-installed Android SDK/NDK on ubuntu-latest
+      - name: Set Android environment
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          if [ -d "${ANDROID_HOME}/ndk" ]; then
+            NDK_VER=$(ls "${ANDROID_HOME}/ndk" | sort -V | tail -1)
+            echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${NDK_VER}" >> $GITHUB_ENV
+          fi
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      # On tag push: decode keystore from secret so Gradle can sign release APKs
+      - name: Prepare signing keystore (tag only)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mkdir -p signing
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > signing/release.keystore
+          echo "KEYSTORE_FILE=$(pwd)/signing/release.keystore" >> $GITHUB_ENV
+          echo "KEYSTORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+          echo "KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}" >> $GITHUB_ENV
+          echo "KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}" >> $GITHUB_ENV
+
+      # Build release APKs: per-ABI + universal (signed when secrets are set)
+      - name: Build release APKs (ABI splits + universal)
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Verify APK output
+        run: |
+          RELEASE_DIR=app/build/outputs/apk/release
+          if [ ! -d "$RELEASE_DIR" ]; then
+            echo "::error::Release output directory not found: $RELEASE_DIR"
+            exit 1
+          fi
+          APK_COUNT=$(find "$RELEASE_DIR" -maxdepth 1 -name "*.apk" | wc -l)
+          if [ "$APK_COUNT" -eq 0 ]; then
+            echo "::error::No APK produced in $RELEASE_DIR"
+            ls -la "$RELEASE_DIR"
+            exit 1
+          fi
+          echo "APK(s) produced:"
+          find "$RELEASE_DIR" -maxdepth 1 -name "*.apk" -exec ls -la {} \;
+
+      - name: Upload release APK artifact (tag only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release
+          path: app/build/outputs/apk/release/
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download release APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-release
+
+      - name: List APKs for release
+        id: apks
+        run: |
+          # Downloaded artifact = contents of app/build/outputs/apk/release/
+          shopt -s nullglob
+          apks=(*.apk)
+          if [ ${#apks[@]} -eq 0 ]; then
+            echo "::error::No APK found in downloaded artifact"
+            ls -la
+            exit 1
+          fi
+          echo "APKs to attach:"
+          printf '%s\n' "${apks[@]}" | sort
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          printf '%s\n' "${apks[@]}" | sort >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.apks.outputs.files }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

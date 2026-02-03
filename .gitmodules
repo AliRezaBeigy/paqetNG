@@ -1,0 +1,9 @@
+[submodule "hev-socks5-tunnel"]
+	path = hev-socks5-tunnel
+	url = https://github.com/heiher/hev-socks5-tunnel
+	active = true
+[submodule "paqet"]
+	path = paqet
+	url = https://github.com/AliRezaBeigy/paqet
+	active = true
+	branch = master

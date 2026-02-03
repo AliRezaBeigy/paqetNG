@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light theme — blue + amber -->
+    <color name="blue_primary">#FF1565C0</color>
+    <color name="blue_secondary">#FF455A64</color>
+    <color name="amber_tertiary">#FFE65100</color>
+    <!-- Dark theme -->
+    <color name="blue_primary_dark">#FF42A5F5</color>
+    <color name="blue_secondary_dark">#FF1976D2</color>
+    <color name="amber_tertiary_dark">#FFFFB74D</color>
+    <!-- Base -->
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

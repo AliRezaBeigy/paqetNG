@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/pref_category_general">
+        <ListPreference
+            app:key="theme"
+            app:title="@string/pref_theme"
+            app:entries="@array/pref_theme_entries"
+            app:entryValues="@array/pref_theme_values"
+            app:useSimpleSummaryProvider="true" />
+        <SwitchPreferenceCompat
+            app:key="show_latency_in_ui"
+            app:title="@string/pref_show_latency"
+            app:summaryOn="@string/pref_show_latency_summary_on"
+            app:summaryOff="@string/pref_show_latency_summary_off"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat
+            app:key="persistent_notification"
+            app:title="@string/pref_persistent_notification"
+            app:summaryOn="@string/pref_persistent_notification_summary_on"
+            app:summaryOff="@string/pref_persistent_notification_summary_off"
+            app:defaultValue="true" />
+        <SwitchPreferenceCompat
+            app:key="start_on_boot"
+            app:title="@string/pref_start_on_boot"
+            app:summaryOn="@string/pref_start_on_boot_summary_on"
+            app:summaryOff="@string/pref_start_on_boot_summary_off"
+            app:defaultValue="false" />
+        <SwitchPreferenceCompat
+            app:key="auto_reconnect"
+            app:title="@string/pref_auto_reconnect"
+            app:summaryOn="@string/pref_auto_reconnect_summary_on"
+            app:summaryOff="@string/pref_auto_reconnect_summary_off"
+            app:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/pref_category_connection">
+        <EditTextPreference
+            app:key="socks_port"
+            app:title="@string/pref_socks_port"
+            app:summary="@string/pref_socks_port_summary"
+            app:dialogMessage="@string/pref_socks_port_dialog"
+            app:defaultValue="1284" />
+        <EditTextPreference
+            app:key="connection_check_url"
+            app:title="@string/pref_connection_check_url"
+            app:summary="@string/pref_connection_check_url_summary"
+            app:defaultValue="https://www.gstatic.com/generate_204" />
+        <EditTextPreference
+            app:key="connection_check_timeout_seconds"
+            app:title="@string/pref_connection_check_timeout"
+            app:summary="@string/pref_connection_check_timeout_summary"
+            app:dialogMessage="@string/pref_connection_check_timeout_dialog"
+            app:defaultValue="10" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -1,0 +1,100 @@
+<resources>
+    <string name="app_name">paqetNG</string>
+
+    <!-- Settings / Preferences -->
+    <string name="pref_category_general">General</string>
+    <string name="pref_category_connection">Connection</string>
+    <string name="pref_category_appearance">Appearance</string>
+
+    <string name="pref_theme">Theme</string>
+    <string name="pref_theme_light">Light</string>
+    <string name="pref_theme_dark">Dark</string>
+    <string name="pref_theme_system">System default</string>
+
+    <string name="pref_show_latency">Show latency in UI</string>
+    <string name="pref_show_latency_summary_on">Latency is shown on the home screen</string>
+    <string name="pref_show_latency_summary_off">Latency is hidden</string>
+
+    <string name="pref_persistent_notification">Persistent VPN notification</string>
+    <string name="pref_persistent_notification_summary_on">Notification stays visible while connected</string>
+    <string name="pref_persistent_notification_summary_off">Minimize notification when connected</string>
+
+    <string name="pref_start_on_boot">Start on boot</string>
+    <string name="pref_start_on_boot_summary_on">Attempt to connect when device starts</string>
+    <string name="pref_start_on_boot_summary_off">Do not auto-connect on boot</string>
+
+    <string name="pref_auto_reconnect">Auto-reconnect</string>
+    <string name="pref_auto_reconnect_summary_on">Reconnect when connection is lost</string>
+    <string name="pref_auto_reconnect_summary_off">Stay disconnected when connection drops</string>
+
+    <string name="pref_socks_port">SOCKS5 port</string>
+    <string name="pref_socks_port_summary">Local port for SOCKS5 proxy (1–65535)</string>
+    <string name="pref_socks_port_dialog">Enter port number (default: 1284)</string>
+
+    <string name="pref_connection_check_url">Connection check URL</string>
+    <string name="pref_connection_check_url_summary">URL used to test latency and connectivity</string>
+
+    <string name="pref_connection_check_timeout">Connection check timeout</string>
+    <string name="pref_connection_check_timeout_summary">Timeout in seconds (3–60)</string>
+    <string name="pref_connection_check_timeout_dialog">Enter timeout in seconds (default: 10)</string>
+
+    <string name="pref_allow_lan">Allow connection from LAN</string>
+    <string name="pref_allow_lan_summary">Listen on 0.0.0.0 so other devices can use this proxy</string>
+
+    <string name="pref_log_level">Log level</string>
+    <string name="pref_log_level_summary">Paqet log verbosity</string>
+    <string name="pref_log_level_none">None</string>
+    <string name="pref_log_level_debug">Debug</string>
+    <string name="pref_log_level_info">Info</string>
+    <string name="pref_log_level_warn">Warn</string>
+    <string name="pref_log_level_error">Error</string>
+    <string name="pref_log_level_fatal">Fatal</string>
+
+    <string name="pref_connection_mode">Mode</string>
+    <string name="pref_connection_mode_summary">VPN (tun) or SOCKS proxy only</string>
+    <string name="pref_connection_mode_vpn">VPN (TUN)</string>
+    <string name="pref_connection_mode_socks">SOCKS only</string>
+
+    <!-- Strings used for fragments for navigation -->
+    <string name="first_fragment_label">First Fragment</string>
+    <string name="second_fragment_label">Second Fragment</string>
+    <string name="next">Next</string>
+    <string name="previous">Previous</string>
+
+    <string name="lorem_ipsum">
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in scelerisque sem. Mauris
+        volutpat, dolor id interdum ullamcorper, risus dolor egestas lectus, sit amet mattis purus
+        dui nec risus. Maecenas non sodales nisi, vel dictum dolor. Class aptent taciti sociosqu ad
+        litora torquent per conubia nostra, per inceptos himenaeos. Suspendisse blandit eleifend
+        diam, vel rutrum tellus vulputate quis. Aliquam eget libero aliquet, imperdiet nisl a,
+        ornare ex. Sed rhoncus est ut libero porta lobortis. Fusce in dictum tellus.\n\n
+        Suspendisse interdum ornare ante. Aliquam nec cursus lorem. Morbi id magna felis. Vivamus
+        egestas, est a condimentum egestas, turpis nisl iaculis ipsum, in dictum tellus dolor sed
+        neque. Morbi tellus erat, dapibus ut sem a, iaculis tincidunt dui. Interdum et malesuada
+        fames ac ante ipsum primis in faucibus. Curabitur et eros porttitor, ultricies urna vitae,
+        molestie nibh. Phasellus at commodo eros, non aliquet metus. Sed maximus nisl nec dolor
+        bibendum, vel congue leo egestas.\n\n
+        Sed interdum tortor nibh, in sagittis risus mollis quis. Curabitur mi odio, condimentum sit
+        amet auctor at, mollis non turpis. Nullam pretium libero vestibulum, finibus orci vel,
+        molestie quam. Fusce blandit tincidunt nulla, quis sollicitudin libero facilisis et. Integer
+        interdum nunc ligula, et fermentum metus hendrerit id. Vestibulum lectus felis, dictum at
+        lacinia sit amet, tristique id quam. Cras eu consequat dui. Suspendisse sodales nunc ligula,
+        in lobortis sem porta sed. Integer id ultrices magna, in luctus elit. Sed a pellentesque
+        est.\n\n
+        Aenean nunc velit, lacinia sed dolor sed, ultrices viverra nulla. Etiam a venenatis nibh.
+        Morbi laoreet, tortor sed facilisis varius, nibh orci rhoncus nulla, id elementum leo dui
+        non lorem. Nam mollis ipsum quis auctor varius. Quisque elementum eu libero sed commodo. In
+        eros nisl, imperdiet vel imperdiet et, scelerisque a mauris. Pellentesque varius ex nunc,
+        quis imperdiet eros placerat ac. Duis finibus orci et est auctor tincidunt. Sed non viverra
+        ipsum. Nunc quis augue egestas, cursus lorem at, molestie sem. Morbi a consectetur ipsum, a
+        placerat diam. Etiam vulputate dignissim convallis. Integer faucibus mauris sit amet finibus
+        convallis.\n\n
+        Phasellus in aliquet mi. Pellentesque habitant morbi tristique senectus et netus et
+        malesuada fames ac turpis egestas. In volutpat arcu ut felis sagittis, in finibus massa
+        gravida. Pellentesque id tellus orci. Integer dictum, lorem sed efficitur ullamcorper,
+        libero justo consectetur ipsum, in mollis nisl ex sed nisl. Donec maximus ullamcorper
+        sodales. Praesent bibendum rhoncus tellus nec feugiat. In a ornare nulla. Donec rhoncus
+        libero vel nunc consequat, quis tincidunt nisl eleifend. Cras bibendum enim a justo luctus
+        vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
+    </string>
+</resources>
