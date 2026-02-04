@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.0.2]
+
+### Feat
+- Add Quick Settings tile to turn VPN on/off from the notification center
+
+### Fix
+- Add missing and remove unintended paqet and tcpdump build
+
 ## [v1.0.1]
 
 ### Feat

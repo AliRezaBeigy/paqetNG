@@ -102,8 +102,9 @@ class PaqetNGVpnService : VpnService() {
             withContext(Dispatchers.IO) {
                 startTun2Socks(socksPort)
             }
-            // Update notification to "VPN connected"
+            // Update notification to "VPN connected"; notify Quick Settings tile
             startForeground(NOTIFICATION_ID, buildNotification(connecting = false))
+            sendBroadcast(Intent(ACTION_VPN_STARTED).setPackage(packageName))
         }
         return START_STICKY
     }
@@ -232,6 +233,8 @@ class PaqetNGVpnService : VpnService() {
         const val ACTION_STOP = "com.alirezabeigy.paqetng.vpn.STOP"
         /** Broadcast sent when VPN is torn down so the app can sync connection state (e.g. stop paqet). */
         const val ACTION_VPN_STOPPED = "com.alirezabeigy.paqetng.vpn.STOPPED"
+        /** Broadcast sent when VPN is connected so Quick Settings tile can update. */
+        const val ACTION_VPN_STARTED = "com.alirezabeigy.paqetng.vpn.STARTED"
         const val EXTRA_SOCKS_PORT = "socks_port"
         private const val DEFAULT_PORT = 1284
         private const val NOTIFICATION_ID = 1

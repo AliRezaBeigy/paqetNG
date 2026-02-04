@@ -187,74 +187,95 @@ tasks.whenTaskAdded {
     }
 }
 
-// Simpler asset stripping for split APKs using AGP 9.0 androidComponents API
 val assetAbiDirs = listOf("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
-
-androidComponents {
-    onVariants { variant ->
-        // Register a task that strips assets after packaging but before final output
-        val stripTaskName = "strip${variant.name.replaceFirstChar { it.uppercase() }}AbiAssets"
-        val stripTask = tasks.register(stripTaskName) {
-            doLast {
-                val apkDir = project.layout.buildDirectory
-                    .dir("outputs/apk/${variant.name}").get().asFile
-                if (!apkDir.isDirectory) {
-                    logger.lifecycle("No APK dir found: $apkDir")
-                    return@doLast
-                }
-                apkDir.walkTopDown()
-                    .filter { it.isFile && it.extension == "apk" }
-                    .forEach { apk ->
-                        val name = apk.name
-                        val keepAbi = when {
-                            name.contains("universal") -> null
-                            name.contains("arm64-v8a") -> "arm64-v8a"
-                            name.contains("armeabi-v7a") -> "armeabi-v7a"
-                            name.contains("x86_64") -> "x86_64"
-                            name.contains("x86") -> "x86"
-                            else -> null
-                        }
-                        if (keepAbi != null) {
-                            logger.lifecycle("Stripping non-$keepAbi assets from ${apk.name}")
-                            stripApkAssets(apk, keepAbi)
-                        }
-                    }
-            }
-        }
-        // Hook strip task after assemble
-        tasks.matching { it.name == "assemble${variant.name.replaceFirstChar { it.uppercase() }}" }.configureEach {
-            finalizedBy(stripTask)
-        }
+fun stripOtherAbiAssets(outDir: File, keepAbi: String) {
+    assetAbiDirs.filter { it != keepAbi }.forEach { other ->
+        val f = outDir.resolve(other)
+        if (f.exists()) f.deleteRecursively()
     }
 }
 
-// Simple APK asset stripping - removes other-ABI asset folders from APK
 fun stripApkAssets(apkFile: File, keepAbi: String) {
-    val removeAbiPrefixes = assetAbiDirs.filter { it != keepAbi }.map { "assets/$it/" }
+    val otherAbiPrefixes = assetAbiDirs.filter { it != keepAbi }
+        .map { "assets/$it/" }
     val tmpFile = File(apkFile.parentFile, "${apkFile.name}.tmp")
     ZipFile(apkFile).use { zip ->
         ZipOutputStream(tmpFile.outputStream()).use { out ->
-            zip.entries().asSequence()
-                .filterNot { entry -> removeAbiPrefixes.any { entry.name.startsWith(it) } }
-                .forEach { entry ->
-                    out.putNextEntry(ZipEntry(entry.name).apply {
-                        time = entry.time
-                        if (entry.method == ZipEntry.STORED) {
-                            method = ZipEntry.STORED
-                            size = entry.size
-                            compressedSize = entry.compressedSize
-                            crc = entry.crc
-                        }
-                    })
-                    if (!entry.isDirectory) {
-                        zip.getInputStream(entry).use { it.copyTo(out) }
-                    }
-                    out.closeEntry()
+            zip.entries().asSequence().forEach { entry ->
+                val name = entry.name
+                val isOtherAbiAsset = otherAbiPrefixes.any { prefix -> name.startsWith(prefix) }
+                if (isOtherAbiAsset) return@forEach
+                val newEntry = ZipEntry(name)
+                newEntry.time = entry.time
+                if (entry.method == ZipEntry.STORED) {
+                    newEntry.method = ZipEntry.STORED
+                    newEntry.size = entry.size
+                    newEntry.compressedSize = entry.compressedSize
+                    newEntry.crc = entry.crc
                 }
+                out.putNextEntry(newEntry)
+                if (!entry.isDirectory) {
+                    zip.getInputStream(entry).use { it.copyTo(out) }
+                }
+                out.closeEntry()
+            }
         }
     }
-    apkFile.delete()
-    tmpFile.renameTo(apkFile)
+    if (!apkFile.delete()) throw GradleException("Failed to replace ${apkFile.name}")
+    if (!tmpFile.renameTo(apkFile)) throw GradleException("Failed to rename ${tmpFile.name}")
+}
+
+// Strip other-ABI assets from all split APKs. If release signing is configured, re-sign release APKs
+// after stripping so the final output is stripped + signed (works for both unsigned and signed builds).
+val stripSplitAbiAssets by tasks.register("stripSplitAbiAssets") {
+    doLast {
+        val apkDir = project.layout.buildDirectory.dir("outputs/apk").get().asFile
+        if (!apkDir.isDirectory) return@doLast
+        val android = project.extensions.findByType(com.android.build.api.dsl.ApplicationExtension::class.java) ?: return@doLast
+        val releaseSigningConfig = android.buildTypes.getByName("release").signingConfig
+        val apksignerPath = findApksigner()
+        val shouldReSign = releaseSigningConfig != null && apksignerPath != null
+        apkDir.walkTopDown()
+            .filter { it.isFile && it.extension == "apk" }
+            .forEach { apk ->
+                val name = apk.name
+                val keepAbi = when {
+                    name.contains("universal") -> null
+                    name.contains("arm64-v8a") || name.contains("arm64") -> "arm64-v8a"
+                    name.contains("armeabi-v7a") || name.contains("armeabi") -> "armeabi-v7a"
+                    name.contains("x86_64") -> "x86_64"
+                    name.contains("x86") -> "x86"
+                    else -> null
+                }
+                if (keepAbi != null) {
+                    stripApkAssets(apk, keepAbi)
+                    if (shouldReSign && apk.absolutePath.contains("release")) {
+                        val config = releaseSigningConfig!!
+                        val keyPass = config.keyPassword ?: config.storePassword
+                        val signedTmp = File(apk.parentFile, "${apk.nameWithoutExtension}-signed.apk")
+                        val proc = ProcessBuilder(
+                            apksignerPath!!.absolutePath,
+                            "sign",
+                            "--ks", config.storeFile!!.absolutePath,
+                            "--ks-pass", "pass:${config.storePassword}",
+                            "--key-pass", "pass:$keyPass",
+                            "--out", signedTmp.absolutePath,
+                            apk.absolutePath
+                        ).redirectErrorStream(true).start()
+                        val exit = proc.waitFor()
+                        if (exit != 0) throw GradleException("apksigner failed (exit $exit): ${proc.inputStream.bufferedReader().readText()}")
+                        if (!apk.delete()) throw GradleException("Failed to replace ${apk.name} after signing")
+                        if (!signedTmp.renameTo(apk)) throw GradleException("Failed to rename signed APK to ${apk.name}")
+                    }
+                }
+            }
+    }
+}
+
+tasks.whenTaskAdded {
+    if (name == "assembleDebug" || name == "assembleRelease") {
+        finalizedBy(stripSplitAbiAssets)
+    }
 }
 
 // Run buildPaqet at start of every build (fails if paqet binaries missing)

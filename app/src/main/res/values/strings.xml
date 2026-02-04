@@ -2,6 +2,14 @@
     <string name="app_name">paqetNG</string>
     <string name="notification_action_disconnect">Disconnect</string>
 
+    <!-- Quick Settings tile -->
+    <string name="app_tile_name">paqetNG</string>
+    <string name="app_tile_label">paqetNG</string>
+    <string name="app_tile_label_connected">Connected</string>
+    <string name="app_tile_first_use">First use: please add a server in the app.</string>
+    <string name="app_tile_vpn_permission">Open the app to grant VPN permission.</string>
+    <string name="app_tile_start_failed">Failed to start.</string>
+
     <!-- Settings / Preferences -->
     <string name="pref_category_general">General</string>
     <string name="pref_category_connection">Connection</string>
