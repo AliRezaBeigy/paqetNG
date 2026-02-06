@@ -23,21 +23,26 @@ class ConfigRepository(private val context: Context) {
     val configs: Flow<List<PaqetConfig>> = context.dataStore.data.map { prefs ->
         val json = prefs[CONFIGS_KEY] ?: "[]"
         (gson.fromJson<List<PaqetConfig>>(json, type) ?: emptyList())
+            .map { it.withDefaults() }
     }
 
     suspend fun add(config: PaqetConfig) {
         context.dataStore.edit { prefs ->
-            val list = (gson.fromJson<List<PaqetConfig>>(prefs[CONFIGS_KEY] ?: "[]", type) ?: emptyList()).toMutableList()
-            list.add(config.copy(id = config.id.ifEmpty { UUID.randomUUID().toString() }))
+            val list = (gson.fromJson<List<PaqetConfig>>(prefs[CONFIGS_KEY] ?: "[]", type) ?: emptyList())
+                .map { it.withDefaults() }
+                .toMutableList()
+            list.add(config.withDefaults().copy(id = config.id.ifEmpty { UUID.randomUUID().toString() }))
             prefs[CONFIGS_KEY] = gson.toJson(list)
         }
     }
 
     suspend fun update(config: PaqetConfig) {
         context.dataStore.edit { prefs ->
-            val list = (gson.fromJson<List<PaqetConfig>>(prefs[CONFIGS_KEY] ?: "[]", type) ?: emptyList()).toMutableList()
+            val list = (gson.fromJson<List<PaqetConfig>>(prefs[CONFIGS_KEY] ?: "[]", type) ?: emptyList())
+                .map { it.withDefaults() }
+                .toMutableList()
             val index = list.indexOfFirst { it.id == config.id }
-            if (index >= 0) list[index] = config
+            if (index >= 0) list[index] = config.withDefaults()
             prefs[CONFIGS_KEY] = gson.toJson(list)
         }
     }
@@ -45,6 +50,7 @@ class ConfigRepository(private val context: Context) {
     suspend fun delete(id: String) {
         context.dataStore.edit { prefs ->
             val list = (gson.fromJson<List<PaqetConfig>>(prefs[CONFIGS_KEY] ?: "[]", type) ?: emptyList())
+                .map { it.withDefaults() }
                 .filter { it.id != id }
             prefs[CONFIGS_KEY] = gson.toJson(list)
         }

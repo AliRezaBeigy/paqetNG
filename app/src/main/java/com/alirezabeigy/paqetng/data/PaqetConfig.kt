@@ -26,6 +26,20 @@ object KcpBlockOptions {
 /** Default TCP flags used to carry data (Push+Ack). paqet cycles through these; valid chars: F,S,R,P,A,U,E,C,N. */
 const val DEFAULT_TCP_FLAGS = "PA"
 
+object KcpModeOptions {
+    val all = listOf("normal", "fast", "fast2", "fast3", "manual")
+    const val default = "fast"
+}
+
+object KcpManualDefaults {
+    const val nodelay = 1
+    const val interval = 10
+    const val resend = 2
+    const val nocongestion = 1
+    const val wdelay = false
+    const val acknodelay = true
+}
+
 data class PaqetConfig(
     val id: String,
     val name: String,
@@ -40,12 +54,107 @@ data class PaqetConfig(
     val localFlag: List<String>? = listOf(DEFAULT_TCP_FLAGS),
     /** Remote TCP flag combinations. Used by paqet for incoming packet patterns. Null = use default. */
     val remoteFlag: List<String>? = listOf(DEFAULT_TCP_FLAGS),
+    /** Number of KCP connections (1-256, default: 1). */
+    val conn: Int = 1,
+    /** KCP mode: normal, fast, fast2, fast3, manual (default: fast). */
+    val kcpMode: String = KcpModeOptions.default,
+    /** Maximum transmission unit in bytes (50-1500, default: 1350). */
+    val mtu: Int = 1350,
+    /** Manual mode: nodelay (0=disable, 1=enable). Only used when mode="manual". */
+    val kcpNodelay: Int? = null,
+    /** Manual mode: interval in milliseconds (10-5000). Only used when mode="manual". */
+    val kcpInterval: Int? = null,
+    /** Manual mode: resend trigger (0-2). Only used when mode="manual". */
+    val kcpResend: Int? = null,
+    /** Manual mode: nocongestion (0=enabled, 1=disabled). Only used when mode="manual". */
+    val kcpNocongestion: Int? = null,
+    /** Manual mode: wdelay write batching (false=flush immediately, true=batch). Only used when mode="manual". */
+    val kcpWdelay: Boolean? = null,
+    /** Manual mode: acknodelay (true=send ACKs immediately, false=batch). Only used when mode="manual". */
+    val kcpAcknodelay: Boolean? = null,
 ) {
     /** Port number from socksListen (e.g. 1284 from "127.0.0.1:1284"). */
     fun socksPort(): Int = socksListen.substringAfterLast(':', "1284").toIntOrNull() ?: 1284
 
     /**
-     * Export as paqet://host:port?enc=...&local=...&remote=...&key=...#name
+     * Normalizes config to ensure all fields have proper defaults.
+     * This is needed when loading old configs from JSON that don't have the new fields.
+     * Handles cases where Gson may set non-nullable fields to null at runtime.
+     */
+    fun withDefaults(): PaqetConfig {
+        val safeKcpMode = try {
+            val mode = kcpMode
+            if (mode.isEmpty() || mode !in KcpModeOptions.all) KcpModeOptions.default else mode
+        } catch (e: Exception) {
+            KcpModeOptions.default
+        }
+        val safeKcpBlock = try {
+            val block = kcpBlock
+            if (block.isEmpty() || block !in KcpBlockOptions.all) KcpBlockOptions.default else block
+        } catch (e: Exception) {
+            KcpBlockOptions.default
+        }
+        val safeSocksListen = try {
+            val listen = socksListen
+            if (listen.isEmpty()) "127.0.0.1:1284" else listen
+        } catch (e: Exception) {
+            "127.0.0.1:1284"
+        }
+        val isManualMode = safeKcpMode == "manual"
+        return copy(
+            conn = if (conn <= 0 || conn > 256) 1 else conn,
+            kcpMode = safeKcpMode,
+            mtu = if (mtu <= 0 || mtu < 50 || mtu > 1500) 1350 else mtu,
+            kcpBlock = safeKcpBlock,
+            socksListen = safeSocksListen,
+            // Manual mode parameters: validate if mode is manual and use defaults if null, otherwise set to null
+            kcpNodelay = if (isManualMode) {
+                try {
+                    kcpNodelay?.coerceIn(0, 1) ?: KcpManualDefaults.nodelay
+                } catch (e: Exception) {
+                    KcpManualDefaults.nodelay
+                }
+            } else null,
+            kcpInterval = if (isManualMode) {
+                try {
+                    kcpInterval?.coerceIn(10, 5000) ?: KcpManualDefaults.interval
+                } catch (e: Exception) {
+                    KcpManualDefaults.interval
+                }
+            } else null,
+            kcpResend = if (isManualMode) {
+                try {
+                    kcpResend?.coerceIn(0, 2) ?: KcpManualDefaults.resend
+                } catch (e: Exception) {
+                    KcpManualDefaults.resend
+                }
+            } else null,
+            kcpNocongestion = if (isManualMode) {
+                try {
+                    kcpNocongestion?.coerceIn(0, 1) ?: KcpManualDefaults.nocongestion
+                } catch (e: Exception) {
+                    KcpManualDefaults.nocongestion
+                }
+            } else null,
+            kcpWdelay = if (isManualMode) {
+                try {
+                    kcpWdelay ?: KcpManualDefaults.wdelay
+                } catch (e: Exception) {
+                    KcpManualDefaults.wdelay
+                }
+            } else null,
+            kcpAcknodelay = if (isManualMode) {
+                try {
+                    kcpAcknodelay ?: KcpManualDefaults.acknodelay
+                } catch (e: Exception) {
+                    KcpManualDefaults.acknodelay
+                }
+            } else null
+        )
+    }
+
+    /**
+     * Export as paqet://host:port?enc=...&local=...&remote=...&key=...&conn=...&mode=...&mtu=...#name
      * Query params are URL-encoded; name is in the fragment (#) at the end.
      */
     fun toPaqetUri(): String {
@@ -58,6 +167,18 @@ data class PaqetConfig(
         if (localList.joinToString(",") != DEFAULT_TCP_FLAGS) params.add("local=${java.net.URLEncoder.encode(localList.joinToString(","), Charsets.UTF_8.name())}")
         if (remoteList.joinToString(",") != DEFAULT_TCP_FLAGS) params.add("remote=${java.net.URLEncoder.encode(remoteList.joinToString(","), Charsets.UTF_8.name())}")
         params.add("key=${java.net.URLEncoder.encode(kcpKey, Charsets.UTF_8.name())}")
+        if (conn != 1) params.add("conn=$conn")
+        if (kcpMode != KcpModeOptions.default) params.add("mode=${java.net.URLEncoder.encode(kcpMode, Charsets.UTF_8.name())}")
+        if (mtu != 1350) params.add("mtu=$mtu")
+        // Manual mode parameters (only include if mode is manual and values are set)
+        if (kcpMode == "manual") {
+            kcpNodelay?.let { params.add("nodelay=$it") }
+            kcpInterval?.let { params.add("interval=$it") }
+            kcpResend?.let { params.add("resend=$it") }
+            kcpNocongestion?.let { params.add("nocongestion=$it") }
+            kcpWdelay?.let { params.add("wdelay=$it") }
+            kcpAcknodelay?.let { params.add("acknodelay=$it") }
+        }
         val queryPart = if (params.isEmpty()) base else "$base?${params.joinToString("&")}"
         val nameVal = name.ifEmpty { serverAddr }
         return if (nameVal.isNotEmpty()) "$queryPart#${java.net.URLEncoder.encode(nameVal, Charsets.UTF_8.name())}" else queryPart
@@ -65,7 +186,7 @@ data class PaqetConfig(
 
     companion object {
         /**
-         * Parse import text: paqet://host:port?enc=...&local=...&remote=...&key=...#name
+         * Parse import text: paqet://host:port?enc=...&local=...&remote=...&key=...&conn=...&mode=...&mtu=...#name
          * Name is in the fragment (#); query params are URL-decoded. Or JSON. Returns null if invalid.
          */
         fun parseFromImport(text: String?, gson: com.google.gson.Gson): PaqetConfig? {
@@ -91,10 +212,25 @@ data class PaqetConfig(
                     val encRaw = get("enc")
                     val encryption = if (encRaw != null && encRaw in KcpBlockOptions.all) encRaw else KcpBlockOptions.default
                     val localStr = get("local")
-                    val localFlag = localStr?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.ifEmpty { null } ?: listOf(DEFAULT_TCP_FLAGS)
+                    val localFlagList = localStr?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+                    val localFlag = if (localFlagList.isNullOrEmpty()) listOf(DEFAULT_TCP_FLAGS) else localFlagList
                     val remoteStr = get("remote")
-                    val remoteFlag = remoteStr?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }?.ifEmpty { null } ?: listOf(DEFAULT_TCP_FLAGS)
+                    val remoteFlagList = remoteStr?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+                    val remoteFlag = if (remoteFlagList.isNullOrEmpty()) listOf(DEFAULT_TCP_FLAGS) else remoteFlagList
                     val kcpKey = get("key") ?: ""
+                    val connRaw = get("conn")
+                    val conn = connRaw?.toIntOrNull()?.coerceIn(1, 256) ?: 1
+                    val modeRaw = get("mode")
+                    val kcpMode = if (modeRaw != null && modeRaw in KcpModeOptions.all) modeRaw else KcpModeOptions.default
+                    val mtuRaw = get("mtu")
+                    val mtu = mtuRaw?.toIntOrNull()?.coerceIn(50, 1500) ?: 1350
+                    // Manual mode parameters (only parse if mode is manual)
+                    val nodelay = if (kcpMode == "manual") get("nodelay")?.toIntOrNull()?.coerceIn(0, 1) else null
+                    val interval = if (kcpMode == "manual") get("interval")?.toIntOrNull()?.coerceIn(10, 5000) else null
+                    val resend = if (kcpMode == "manual") get("resend")?.toIntOrNull()?.coerceIn(0, 2) else null
+                    val nocongestion = if (kcpMode == "manual") get("nocongestion")?.toIntOrNull()?.coerceIn(0, 1) else null
+                    val wdelay = if (kcpMode == "manual") get("wdelay")?.toBooleanStrictOrNull() else null
+                    val acknodelay = if (kcpMode == "manual") get("acknodelay")?.toBooleanStrictOrNull() else null
                     PaqetConfig(
                         id = "",
                         name = resolvedName,
@@ -106,7 +242,16 @@ data class PaqetConfig(
                         kcpBlock = encryption,
                         socksListen = "127.0.0.1:1284",
                         localFlag = localFlag,
-                        remoteFlag = remoteFlag
+                        remoteFlag = remoteFlag,
+                        conn = conn,
+                        kcpMode = kcpMode,
+                        mtu = mtu,
+                        kcpNodelay = nodelay,
+                        kcpInterval = interval,
+                        kcpResend = resend,
+                        kcpNocongestion = nocongestion,
+                        kcpWdelay = wdelay,
+                        kcpAcknodelay = acknodelay
                     )
                 } catch (_: Exception) {
                     null
@@ -114,7 +259,7 @@ data class PaqetConfig(
             }
             val jsonLine = t.lines().find { it.trim().startsWith("{") } ?: t
             return try {
-                gson.fromJson(jsonLine, PaqetConfig::class.java)
+                gson.fromJson(jsonLine, PaqetConfig::class.java)?.withDefaults()
             } catch (_: Exception) {
                 null
             }
