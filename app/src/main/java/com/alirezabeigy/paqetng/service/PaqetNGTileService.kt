@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.net.VpnService
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.service.quicksettings.Tile
@@ -147,10 +148,13 @@ class PaqetNGTileService : TileService() {
                 return@Thread
             }
             mainHandler.postDelayed({
-                applicationContext.startForegroundService(
-                    Intent(applicationContext, PaqetNGVpnService::class.java)
-                        .putExtra(PaqetNGVpnService.EXTRA_SOCKS_PORT, config.socksPort())
-                )
+                val intent = Intent(applicationContext, PaqetNGVpnService::class.java)
+                    .putExtra(PaqetNGVpnService.EXTRA_SOCKS_PORT, config.socksPort())
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    applicationContext.startForegroundService(intent)
+                } else {
+                    applicationContext.startService(intent)
+                }
             }, 800)
         }.start()
     }

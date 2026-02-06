@@ -2,6 +2,7 @@ package com.alirezabeigy.paqetng
 
 import android.content.Intent
 import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -179,10 +180,13 @@ class MainActivity : ComponentActivity() {
             val runnable = Runnable {
                 pendingVpnStartRunnable = null
                 logBuffer.append(AppLogBuffer.TAG_VPN, "VPN starting port=${config.socksPort()} config=${config.name.ifEmpty { config.serverAddr }}")
-                startForegroundService(
-                    Intent(this, PaqetNGVpnService::class.java)
-                        .putExtra(PaqetNGVpnService.EXTRA_SOCKS_PORT, config.socksPort())
-                )
+                val intent = Intent(this, PaqetNGVpnService::class.java)
+                    .putExtra(PaqetNGVpnService.EXTRA_SOCKS_PORT, config.socksPort())
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(intent)
+                } else {
+                    startService(intent)
+                }
             }
             pendingVpnStartRunnable = runnable
             mainHandler.postDelayed(runnable, 800)

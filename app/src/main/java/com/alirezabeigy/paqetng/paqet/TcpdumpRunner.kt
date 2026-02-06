@@ -106,7 +106,10 @@ class TcpdumpRunner(
                 }.apply { isDaemon = true; start() }
             }
             Thread {
-                process?.waitFor()
+                val proc = process
+                if (proc != null) {
+                    proc.waitFor()
+                }
                 _isRunning.value = false
                 process = null
             }.start()
@@ -126,8 +129,24 @@ class TcpdumpRunner(
         if (p != null) {
             p.destroy()
             Thread {
-                if (!p.waitFor(2, TimeUnit.SECONDS)) {
-                    p.destroyForcibly()
+                val terminated = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    p.waitFor(2, TimeUnit.SECONDS)
+                } else {
+                    // For API < 26, use a thread with timeout
+                    val thread = Thread {
+                        p.waitFor()
+                    }
+                    thread.start()
+                    thread.join(2000)
+                    !thread.isAlive
+                }
+                if (!terminated) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        p.destroyForcibly()
+                    } else {
+                        // For API < 26, destroy() is already called, try again
+                        p.destroy()
+                    }
                 }
                 outputReaderThread?.join(1000)
                 outputReaderThread = null
@@ -143,10 +162,21 @@ class TcpdumpRunner(
             val p = ProcessBuilder("su", "-c", "id")
                 .redirectErrorStream(true)
                 .start()
-            val exit = p.waitFor()
+            val exit = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                p.waitFor(5, TimeUnit.SECONDS)
+            } else {
+                // For API < 26, use a thread with timeout
+                var exited = false
+                val thread = Thread {
+                    exited = p.waitFor() == 0
+                }
+                thread.start()
+                thread.join(5000)
+                exited
+            }
             p.destroy()
-            exit == 0
-        } catch (e: Exception) {
+            exit
+        } catch (_: Exception) {
             false
         }
     }
