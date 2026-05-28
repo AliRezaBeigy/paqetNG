@@ -36,7 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -215,7 +215,7 @@ private fun PreferenceSection(
         )
         Card(
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                containerColor = Color.Transparent
             ),
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth()
@@ -238,11 +238,10 @@ private fun PreferenceThemeRow(
     onThemeSelected: (ThemePref) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val themeLabel = when (theme) {
-        ThemePref.LIGHT -> context.getString(R.string.pref_theme_light)
-        ThemePref.DARK -> context.getString(R.string.pref_theme_dark)
-        ThemePref.SYSTEM -> context.getString(R.string.pref_theme_system)
+        ThemePref.LIGHT -> stringResource(R.string.pref_theme_light)
+        ThemePref.DARK -> stringResource(R.string.pref_theme_dark)
+        ThemePref.SYSTEM -> stringResource(R.string.pref_theme_system)
     }
 
     Box(modifier = Modifier.fillMaxWidth()) {
@@ -262,9 +261,9 @@ private fun PreferenceThemeRow(
         ) {
             ThemePref.entries.forEach { pref ->
                 val label = when (pref) {
-                    ThemePref.LIGHT -> context.getString(R.string.pref_theme_light)
-                    ThemePref.DARK -> context.getString(R.string.pref_theme_dark)
-                    ThemePref.SYSTEM -> context.getString(R.string.pref_theme_system)
+                    ThemePref.LIGHT -> stringResource(R.string.pref_theme_light)
+                    ThemePref.DARK -> stringResource(R.string.pref_theme_dark)
+                    ThemePref.SYSTEM -> stringResource(R.string.pref_theme_system)
                 }
                 DropdownMenuItem(
                     text = { Text(label) },
@@ -309,14 +308,13 @@ private fun PreferenceLogLevelRow(
     onLogLevelSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val levelLabel = when (logLevel) {
-        "none" -> context.getString(R.string.pref_log_level_none)
-        "debug" -> context.getString(R.string.pref_log_level_debug)
-        "info" -> context.getString(R.string.pref_log_level_info)
-        "warn" -> context.getString(R.string.pref_log_level_warn)
-        "error" -> context.getString(R.string.pref_log_level_error)
-        "fatal" -> context.getString(R.string.pref_log_level_fatal)
+        "none" -> stringResource(R.string.pref_log_level_none)
+        "debug" -> stringResource(R.string.pref_log_level_debug)
+        "info" -> stringResource(R.string.pref_log_level_info)
+        "warn" -> stringResource(R.string.pref_log_level_warn)
+        "error" -> stringResource(R.string.pref_log_level_error)
+        "fatal" -> stringResource(R.string.pref_log_level_fatal)
         else -> logLevel
     }
 
@@ -337,12 +335,12 @@ private fun PreferenceLogLevelRow(
         ) {
             SettingsRepository.LOG_LEVELS.forEach { level ->
                 val label = when (level) {
-                    "none" -> context.getString(R.string.pref_log_level_none)
-                    "debug" -> context.getString(R.string.pref_log_level_debug)
-                    "info" -> context.getString(R.string.pref_log_level_info)
-                    "warn" -> context.getString(R.string.pref_log_level_warn)
-                    "error" -> context.getString(R.string.pref_log_level_error)
-                    "fatal" -> context.getString(R.string.pref_log_level_fatal)
+                    "none" -> stringResource(R.string.pref_log_level_none)
+                    "debug" -> stringResource(R.string.pref_log_level_debug)
+                    "info" -> stringResource(R.string.pref_log_level_info)
+                    "warn" -> stringResource(R.string.pref_log_level_warn)
+                    "error" -> stringResource(R.string.pref_log_level_error)
+                    "fatal" -> stringResource(R.string.pref_log_level_fatal)
                     else -> level
                 }
                 DropdownMenuItem(
@@ -363,10 +361,9 @@ private fun PreferenceConnectionModeRow(
     onModeSelected: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     val modeLabel = when (connectionMode) {
-        "vpn" -> context.getString(R.string.pref_connection_mode_vpn)
-        "socks" -> context.getString(R.string.pref_connection_mode_socks)
+        "vpn" -> stringResource(R.string.pref_connection_mode_vpn)
+        "socks" -> stringResource(R.string.pref_connection_mode_socks)
         else -> connectionMode
     }
 
@@ -387,8 +384,8 @@ private fun PreferenceConnectionModeRow(
         ) {
             SettingsRepository.CONNECTION_MODES.forEach { mode ->
                 val label = when (mode) {
-                    "vpn" -> context.getString(R.string.pref_connection_mode_vpn)
-                    "socks" -> context.getString(R.string.pref_connection_mode_socks)
+                    "vpn" -> stringResource(R.string.pref_connection_mode_vpn)
+                    "socks" -> stringResource(R.string.pref_connection_mode_socks)
                     else -> mode
                 }
                 DropdownMenuItem(
