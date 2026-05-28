@@ -28,16 +28,16 @@ const val DEFAULT_TCP_FLAGS = "PA"
 
 object KcpModeOptions {
     val all = listOf("normal", "fast", "fast2", "fast3", "manual")
-    const val default = "fast"
+    const val DEFAULT = "fast"
 }
 
 object KcpManualDefaults {
-    const val nodelay = 1
-    const val interval = 10
-    const val resend = 2
-    const val nocongestion = 1
-    const val wdelay = false
-    const val acknodelay = true
+    const val NO_DELAY = 1
+    const val INTERVAL = 10
+    const val RESEND = 2
+    const val NO_CONGESTION = 1
+    const val W_DELAY = false
+    const val ACK_NO_DELAY = true
 }
 
 data class PaqetConfig(
@@ -57,7 +57,7 @@ data class PaqetConfig(
     /** Number of KCP connections (1-256, default: 1). */
     val conn: Int = 1,
     /** KCP mode: normal, fast, fast2, fast3, manual (default: fast). */
-    val kcpMode: String = KcpModeOptions.default,
+    val kcpMode: String = KcpModeOptions.DEFAULT,
     /** Maximum transmission unit in bytes (50-1500, default: 1350). */
     val mtu: Int = 1350,
     /** Manual mode: nodelay (0=disable, 1=enable). Only used when mode="manual". */
@@ -84,9 +84,9 @@ data class PaqetConfig(
     fun withDefaults(): PaqetConfig {
         val safeKcpMode = try {
             val mode = kcpMode
-            if (mode.isEmpty() || mode !in KcpModeOptions.all) KcpModeOptions.default else mode
+            if (mode.isEmpty() || mode !in KcpModeOptions.all) KcpModeOptions.DEFAULT else mode
         } catch (_: Exception) {
-            KcpModeOptions.default
+            KcpModeOptions.DEFAULT
         }
         val safeKcpBlock = try {
             val block = kcpBlock
@@ -96,7 +96,7 @@ data class PaqetConfig(
         }
         val safeSocksListen = try {
             val listen = socksListen
-            if (listen.isEmpty()) "127.0.0.1:1284" else listen
+            listen.ifEmpty { "127.0.0.1:1284" }
         } catch (_: Exception) {
             "127.0.0.1:1284"
         }
@@ -110,44 +110,44 @@ data class PaqetConfig(
             // Manual mode parameters: validate if mode is manual and use defaults if null, otherwise set to null
             kcpNodelay = if (isManualMode) {
                 try {
-                    kcpNodelay?.coerceIn(0, 1) ?: KcpManualDefaults.nodelay
+                    kcpNodelay?.coerceIn(0, 1) ?: KcpManualDefaults.NO_DELAY
                 } catch (_: Exception) {
-                    KcpManualDefaults.nodelay
+                    KcpManualDefaults.NO_DELAY
                 }
             } else null,
             kcpInterval = if (isManualMode) {
                 try {
-                    kcpInterval?.coerceIn(10, 5000) ?: KcpManualDefaults.interval
+                    kcpInterval?.coerceIn(10, 5000) ?: KcpManualDefaults.INTERVAL
                 } catch (_: Exception) {
-                    KcpManualDefaults.interval
+                    KcpManualDefaults.INTERVAL
                 }
             } else null,
             kcpResend = if (isManualMode) {
                 try {
-                    kcpResend?.coerceIn(0, 2) ?: KcpManualDefaults.resend
+                    kcpResend?.coerceIn(0, 2) ?: KcpManualDefaults.RESEND
                 } catch (_: Exception) {
-                    KcpManualDefaults.resend
+                    KcpManualDefaults.RESEND
                 }
             } else null,
             kcpNocongestion = if (isManualMode) {
                 try {
-                    kcpNocongestion?.coerceIn(0, 1) ?: KcpManualDefaults.nocongestion
+                    kcpNocongestion?.coerceIn(0, 1) ?: KcpManualDefaults.NO_CONGESTION
                 } catch (_: Exception) {
-                    KcpManualDefaults.nocongestion
+                    KcpManualDefaults.NO_CONGESTION
                 }
             } else null,
             kcpWdelay = if (isManualMode) {
                 try {
-                    kcpWdelay ?: KcpManualDefaults.wdelay
+                    kcpWdelay ?: KcpManualDefaults.W_DELAY
                 } catch (_: Exception) {
-                    KcpManualDefaults.wdelay
+                    KcpManualDefaults.W_DELAY
                 }
             } else null,
             kcpAcknodelay = if (isManualMode) {
                 try {
-                    kcpAcknodelay ?: KcpManualDefaults.acknodelay
+                    kcpAcknodelay ?: KcpManualDefaults.ACK_NO_DELAY
                 } catch (_: Exception) {
-                    KcpManualDefaults.acknodelay
+                    KcpManualDefaults.ACK_NO_DELAY
                 }
             } else null
         )
@@ -168,7 +168,7 @@ data class PaqetConfig(
         if (remoteList.joinToString(",") != DEFAULT_TCP_FLAGS) params.add("remote=${java.net.URLEncoder.encode(remoteList.joinToString(","), Charsets.UTF_8.name())}")
         params.add("key=${java.net.URLEncoder.encode(kcpKey, Charsets.UTF_8.name())}")
         if (conn != 1) params.add("conn=$conn")
-        if (kcpMode != KcpModeOptions.default) params.add("mode=${java.net.URLEncoder.encode(kcpMode, Charsets.UTF_8.name())}")
+        if (kcpMode != KcpModeOptions.DEFAULT) params.add("mode=${java.net.URLEncoder.encode(kcpMode, Charsets.UTF_8.name())}")
         if (mtu != 1350) params.add("mtu=$mtu")
         // Manual mode parameters (only include if mode is manual and values are set)
         if (kcpMode == "manual") {
@@ -221,16 +221,16 @@ data class PaqetConfig(
                     val connRaw = get("conn")
                     val conn = connRaw?.toIntOrNull()?.coerceIn(1, 256) ?: 1
                     val modeRaw = get("mode")
-                    val kcpMode = if (modeRaw != null && modeRaw in KcpModeOptions.all) modeRaw else KcpModeOptions.default
+                    val kcpMode = if (modeRaw != null && modeRaw in KcpModeOptions.all) modeRaw else KcpModeOptions.DEFAULT
                     val mtuRaw = get("mtu")
                     val mtu = mtuRaw?.toIntOrNull()?.coerceIn(50, 1500) ?: 1350
                     // Manual mode parameters (only parse if mode is manual)
-                    val nodelay = if (kcpMode == "manual") get("nodelay")?.toIntOrNull()?.coerceIn(0, 1) else null
+                    val noDelay = if (kcpMode == "manual") get("nodelay")?.toIntOrNull()?.coerceIn(0, 1) else null
                     val interval = if (kcpMode == "manual") get("interval")?.toIntOrNull()?.coerceIn(10, 5000) else null
                     val resend = if (kcpMode == "manual") get("resend")?.toIntOrNull()?.coerceIn(0, 2) else null
-                    val nocongestion = if (kcpMode == "manual") get("nocongestion")?.toIntOrNull()?.coerceIn(0, 1) else null
-                    val wdelay = if (kcpMode == "manual") get("wdelay")?.toBooleanStrictOrNull() else null
-                    val acknodelay = if (kcpMode == "manual") get("acknodelay")?.toBooleanStrictOrNull() else null
+                    val noCongestion = if (kcpMode == "manual") get("nocongestion")?.toIntOrNull()?.coerceIn(0, 1) else null
+                    val wDelay = if (kcpMode == "manual") get("wdelay")?.toBooleanStrictOrNull() else null
+                    val ackNoDelay = if (kcpMode == "manual") get("acknodelay")?.toBooleanStrictOrNull() else null
                     PaqetConfig(
                         id = "",
                         name = resolvedName,
@@ -246,12 +246,12 @@ data class PaqetConfig(
                         conn = conn,
                         kcpMode = kcpMode,
                         mtu = mtu,
-                        kcpNodelay = nodelay,
+                        kcpNodelay = noDelay,
                         kcpInterval = interval,
                         kcpResend = resend,
-                        kcpNocongestion = nocongestion,
-                        kcpWdelay = wdelay,
-                        kcpAcknodelay = acknodelay
+                        kcpNocongestion = noCongestion,
+                        kcpWdelay = wDelay,
+                        kcpAcknodelay = ackNoDelay
                     )
                 } catch (_: Exception) {
                     null

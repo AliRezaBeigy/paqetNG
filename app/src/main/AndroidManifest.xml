@@ -1,13 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera" android:required="false" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"
+        tools:ignore="ForegroundServicesPolicy" />
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        tools:ignore="ForegroundServicesPolicy" />
 
     <application
         android:name=".PaqetNGApplication"
@@ -43,28 +48,18 @@
                 <action android:name="android.net.VpnService" />
             </intent-filter>
             <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FULFILLMENT_CAPABILITY"
-                android:value="vpn" />
-            <meta-data
-                android:name="android.app.FOREGROUND_SERVICE_TYPE_SPECIAL_USE"
-                android:value="This service provides VPN functionality by creating a TUN interface and routing device traffic through a SOCKS5 proxy. The foreground service is required to maintain the VPN connection and display connection status to the user." />
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="VpnService maintaining TUN tunnel and routing device traffic through a local SOCKS5 proxy; foreground notification shows VPN connection status." />
         </service>
         <service
             android:name=".service.PaqetNGTileService"
             android:exported="true"
-            android:foregroundServiceType="specialUse"
             android:icon="@drawable/ic_tile_p"
             android:label="@string/app_tile_name"
             android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
-            <property
-                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="tile" />
-            <meta-data
-                android:name="android.app.FOREGROUND_SERVICE_TYPE_SPECIAL_USE"
-                android:value="This service provides a Quick Settings tile that allows users to quickly toggle VPN connection on/off from the notification panel. The foreground service type is required for Quick Settings tile functionality." />
         </service>
     </application>
 

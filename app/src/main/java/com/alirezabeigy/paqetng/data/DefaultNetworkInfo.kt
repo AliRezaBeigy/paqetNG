@@ -42,9 +42,9 @@ class DefaultNetworkInfoProvider(private val context: Context) {
                 ?: return@withContext getDefaultNetworkInfoViaRoot()
             val ipv4Addr = "$ipv4:0"
             val gateway = lp.routes
-                ?.firstOrNull { it.gateway != null && it.isDefaultRoute && it.gateway is Inet4Address }
+                .firstOrNull { it.gateway != null && it.isDefaultRoute && it.gateway is Inet4Address }
                 ?.gateway
-                ?: lp.routes?.firstOrNull { it.gateway != null && it.gateway is Inet4Address }?.gateway
+                ?: lp.routes.firstOrNull { it.gateway != null && it.gateway is Inet4Address }?.gateway
             val gatewayIp = gateway?.hostAddress ?: ""
             Log.d(TAG, "gatewayIp=$gatewayIp")
             val routerMacFromFile = readMacFromArp(gatewayIp)

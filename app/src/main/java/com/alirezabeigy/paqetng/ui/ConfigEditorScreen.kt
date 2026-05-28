@@ -22,12 +22,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -57,43 +57,43 @@ fun ConfigEditorScreen(
     var conn by remember(config.id) { mutableStateOf(config.conn.toString()) }
     var kcpMode by remember(config.id) {
         mutableStateOf(
-            if (config.kcpMode in KcpModeOptions.all) config.kcpMode else KcpModeOptions.default
+            if (config.kcpMode in KcpModeOptions.all) config.kcpMode else KcpModeOptions.DEFAULT
         )
     }
     var modeExpanded by remember(config.id) { mutableStateOf(false) }
     var mtu by remember(config.id) { mutableStateOf(config.mtu.toString()) }
     val initialIsManualMode = config.kcpMode == "manual"
     var kcpNodelay by remember(config.id) { 
-        mutableStateOf(config.kcpNodelay?.toString() ?: if (initialIsManualMode) KcpManualDefaults.nodelay.toString() else "")
+        mutableStateOf(config.kcpNodelay?.toString() ?: if (initialIsManualMode) KcpManualDefaults.NO_DELAY.toString() else "")
     }
     var kcpInterval by remember(config.id) { 
-        mutableStateOf(config.kcpInterval?.toString() ?: if (initialIsManualMode) KcpManualDefaults.interval.toString() else "")
+        mutableStateOf(config.kcpInterval?.toString() ?: if (initialIsManualMode) KcpManualDefaults.INTERVAL.toString() else "")
     }
     var kcpResend by remember(config.id) { 
-        mutableStateOf(config.kcpResend?.toString() ?: if (initialIsManualMode) KcpManualDefaults.resend.toString() else "")
+        mutableStateOf(config.kcpResend?.toString() ?: if (initialIsManualMode) KcpManualDefaults.RESEND.toString() else "")
     }
     var kcpNocongestion by remember(config.id) { 
-        mutableStateOf(config.kcpNocongestion?.toString() ?: if (initialIsManualMode) KcpManualDefaults.nocongestion.toString() else "")
+        mutableStateOf(config.kcpNocongestion?.toString() ?: if (initialIsManualMode) KcpManualDefaults.NO_CONGESTION.toString() else "")
     }
     var kcpWdelay by remember(config.id) { 
-        mutableStateOf(config.kcpWdelay?.toString() ?: if (initialIsManualMode) KcpManualDefaults.wdelay.toString() else "")
+        mutableStateOf(config.kcpWdelay?.toString() ?: if (initialIsManualMode) KcpManualDefaults.W_DELAY.toString() else "")
     }
     var kcpAcknodelay by remember(config.id) { 
-        mutableStateOf(config.kcpAcknodelay?.toString() ?: if (initialIsManualMode) KcpManualDefaults.acknodelay.toString() else "")
+        mutableStateOf(config.kcpAcknodelay?.toString() ?: if (initialIsManualMode) KcpManualDefaults.ACK_NO_DELAY.toString() else "")
     }
     var localFlag by remember(config.id) {
         mutableStateOf(
             when {
-                config.localFlag == null || config.localFlag!!.isEmpty() -> DEFAULT_TCP_FLAGS
-                else -> config.localFlag!!.joinToString(", ")
+                config.localFlag.isNullOrEmpty() -> DEFAULT_TCP_FLAGS
+                else -> config.localFlag.joinToString(", ")
             }
         )
     }
     var remoteFlag by remember(config.id) {
         mutableStateOf(
             when {
-                config.remoteFlag == null || config.remoteFlag!!.isEmpty() -> DEFAULT_TCP_FLAGS
-                else -> config.remoteFlag!!.joinToString(", ")
+                config.remoteFlag.isNullOrEmpty() -> DEFAULT_TCP_FLAGS
+                else -> config.remoteFlag.joinToString(", ")
             }
         )
     }
@@ -119,22 +119,22 @@ fun ConfigEditorScreen(
                             val mtuValue = mtu.toIntOrNull()?.coerceIn(50, 1500) ?: 1350
                             val isManualMode = kcpMode == "manual"
                             val nodelayValue = if (isManualMode) {
-                                kcpNodelay.toIntOrNull()?.coerceIn(0, 1) ?: KcpManualDefaults.nodelay
+                                kcpNodelay.toIntOrNull()?.coerceIn(0, 1) ?: KcpManualDefaults.NO_DELAY
                             } else null
                             val intervalValue = if (isManualMode) {
-                                kcpInterval.toIntOrNull()?.coerceIn(10, 5000) ?: KcpManualDefaults.interval
+                                kcpInterval.toIntOrNull()?.coerceIn(10, 5000) ?: KcpManualDefaults.INTERVAL
                             } else null
                             val resendValue = if (isManualMode) {
-                                kcpResend.toIntOrNull()?.coerceIn(0, 2) ?: KcpManualDefaults.resend
+                                kcpResend.toIntOrNull()?.coerceIn(0, 2) ?: KcpManualDefaults.RESEND
                             } else null
                             val nocongestionValue = if (isManualMode) {
-                                kcpNocongestion.toIntOrNull()?.coerceIn(0, 1) ?: KcpManualDefaults.nocongestion
+                                kcpNocongestion.toIntOrNull()?.coerceIn(0, 1) ?: KcpManualDefaults.NO_CONGESTION
                             } else null
                             val wdelayValue = if (isManualMode) {
-                                kcpWdelay.toBooleanStrictOrNull() ?: KcpManualDefaults.wdelay
+                                kcpWdelay.toBooleanStrictOrNull() ?: KcpManualDefaults.W_DELAY
                             } else null
                             val acknodelayValue = if (isManualMode) {
-                                kcpAcknodelay.toBooleanStrictOrNull() ?: KcpManualDefaults.acknodelay
+                                kcpAcknodelay.toBooleanStrictOrNull() ?: KcpManualDefaults.ACK_NO_DELAY
                             } else null
                             onSave(
                                 config.copy(
@@ -190,15 +190,15 @@ fun ConfigEditorScreen(
                 onExpandedChange = { encryptionExpanded = it },
                 modifier = Modifier.fillMaxWidth()
             ) {
+                val fillMaxWidth = Modifier
+                    .fillMaxWidth()
                 OutlinedTextField(
                     value = kcpBlock,
                     onValueChange = { },
                     readOnly = true,
                     label = { Text("Encryption") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = encryptionExpanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    modifier = fillMaxWidth.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
                 )
                 ExposedDropdownMenu(
                     expanded = encryptionExpanded,
@@ -234,6 +234,8 @@ fun ConfigEditorScreen(
                 onExpandedChange = { modeExpanded = it },
                 modifier = Modifier.fillMaxWidth()
             ) {
+                val fillMaxWidth = Modifier
+                    .fillMaxWidth()
                 OutlinedTextField(
                     value = kcpMode,
                     onValueChange = { },
@@ -241,9 +243,7 @@ fun ConfigEditorScreen(
                     label = { Text("KCP mode") },
                     supportingText = { Text("normal, fast, fast2, fast3, manual (default: fast)") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = modeExpanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
+                    modifier = fillMaxWidth.menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true)
                 )
                 ExposedDropdownMenu(
                     expanded = modeExpanded,
@@ -257,12 +257,12 @@ fun ConfigEditorScreen(
                                 modeExpanded = false
                                 // When switching to manual mode, populate defaults if fields are empty
                                 if (option == "manual") {
-                                    if (kcpNodelay.isEmpty()) kcpNodelay = KcpManualDefaults.nodelay.toString()
-                                    if (kcpInterval.isEmpty()) kcpInterval = KcpManualDefaults.interval.toString()
-                                    if (kcpResend.isEmpty()) kcpResend = KcpManualDefaults.resend.toString()
-                                    if (kcpNocongestion.isEmpty()) kcpNocongestion = KcpManualDefaults.nocongestion.toString()
-                                    if (kcpWdelay.isEmpty()) kcpWdelay = KcpManualDefaults.wdelay.toString()
-                                    if (kcpAcknodelay.isEmpty()) kcpAcknodelay = KcpManualDefaults.acknodelay.toString()
+                                    if (kcpNodelay.isEmpty()) kcpNodelay = KcpManualDefaults.NO_DELAY.toString()
+                                    if (kcpInterval.isEmpty()) kcpInterval = KcpManualDefaults.INTERVAL.toString()
+                                    if (kcpResend.isEmpty()) kcpResend = KcpManualDefaults.RESEND.toString()
+                                    if (kcpNocongestion.isEmpty()) kcpNocongestion = KcpManualDefaults.NO_CONGESTION.toString()
+                                    if (kcpWdelay.isEmpty()) kcpWdelay = KcpManualDefaults.W_DELAY.toString()
+                                    if (kcpAcknodelay.isEmpty()) kcpAcknodelay = KcpManualDefaults.ACK_NO_DELAY.toString()
                                 }
                             }
                         )

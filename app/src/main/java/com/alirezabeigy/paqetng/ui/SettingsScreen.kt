@@ -250,7 +250,7 @@ private fun PreferenceThemeRow(
             headlineContent = { Text(stringResource(R.string.pref_theme), style = MaterialTheme.typography.bodyLarge) },
             supportingContent = { Text(themeLabel, style = MaterialTheme.typography.bodySmall) },
             colors = ListItemDefaults.colors(
-                containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                containerColor = Color.Transparent,
                 headlineColor = MaterialTheme.colorScheme.onSurface,
                 supportingColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -295,7 +295,7 @@ private fun PreferenceSwitchRow(
             )
         },
         colors = ListItemDefaults.colors(
-            containerColor = androidx.compose.ui.graphics.Color.Transparent,
+            containerColor = Color.Transparent,
             headlineColor = MaterialTheme.colorScheme.onSurface,
             supportingColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -324,7 +324,7 @@ private fun PreferenceLogLevelRow(
             headlineContent = { Text(stringResource(R.string.pref_log_level), style = MaterialTheme.typography.bodyLarge) },
             supportingContent = { Text(levelLabel, style = MaterialTheme.typography.bodySmall) },
             colors = ListItemDefaults.colors(
-                containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                containerColor = Color.Transparent,
                 headlineColor = MaterialTheme.colorScheme.onSurface,
                 supportingColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -373,7 +373,7 @@ private fun PreferenceConnectionModeRow(
             headlineContent = { Text(stringResource(R.string.pref_connection_mode), style = MaterialTheme.typography.bodyLarge) },
             supportingContent = { Text(modeLabel, style = MaterialTheme.typography.bodySmall) },
             colors = ListItemDefaults.colors(
-                containerColor = androidx.compose.ui.graphics.Color.Transparent,
+                containerColor = Color.Transparent,
                 headlineColor = MaterialTheme.colorScheme.onSurface,
                 supportingColor = MaterialTheme.colorScheme.onSurfaceVariant
             )

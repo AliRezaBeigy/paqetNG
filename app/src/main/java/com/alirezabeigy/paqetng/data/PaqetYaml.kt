@@ -17,12 +17,12 @@ fun PaqetConfig.toPaqetYaml(logLevel: String = "debug"): String {
     val isManualMode = kcpMode == "manual"
     val manualParams = buildString {
         if (isManualMode) {
-            val nodelay = kcpNodelay ?: KcpManualDefaults.nodelay
-            val interval = kcpInterval ?: KcpManualDefaults.interval
-            val resend = kcpResend ?: KcpManualDefaults.resend
-            val nocongestion = kcpNocongestion ?: KcpManualDefaults.nocongestion
-            val wdelay = kcpWdelay ?: KcpManualDefaults.wdelay
-            val acknodelay = kcpAcknodelay ?: KcpManualDefaults.acknodelay
+            val nodelay = kcpNodelay ?: KcpManualDefaults.NO_DELAY
+            val interval = kcpInterval ?: KcpManualDefaults.INTERVAL
+            val resend = kcpResend ?: KcpManualDefaults.RESEND
+            val nocongestion = kcpNocongestion ?: KcpManualDefaults.NO_CONGESTION
+            val wdelay = kcpWdelay ?: KcpManualDefaults.W_DELAY
+            val acknodelay = kcpAcknodelay ?: KcpManualDefaults.ACK_NO_DELAY
             append("\n    nodelay: $nodelay")
             append("\n    interval: $interval")
             append("\n    resend: $resend")
