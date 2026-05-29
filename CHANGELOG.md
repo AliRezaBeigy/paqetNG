@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.1.0]
+
+### Chore
+- Update build tooling and dependencies
+- Update paqet submodule to v1.0.0-alpha.19 (configurable smux keepalive settings, iterator off-by-one fix)
+- Update hev-socks5-tunnel submodule (TCP fastopen support, HevConfig 2.15.0, LwIP and HevSocks5Core updates)
+
+### Refactor
+- Refine VPN foreground service manifest
+- Settings UI polish and code cleanups
+
 ## [v1.0.4]
 
 ### Chore
