@@ -156,7 +156,7 @@ fun ConfigEditorScreen(
                                 )
                             )
                         }
-                    ) { Text("Save", color = MaterialTheme.colorScheme.onSurface) }
+                    ) { Text("Save", color = MaterialTheme.colorScheme.onPrimary) }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,

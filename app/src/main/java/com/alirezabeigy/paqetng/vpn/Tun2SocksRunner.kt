@@ -22,7 +22,10 @@ class Tun2SocksRunner(
             }
             Log.d(TAG, "Hev tunnel config:\n$configContent")
             val service = com.v2ray.ang.service.TProxyService()
-            service.startTun2Socks(configFile.absolutePath, tunFd)
+            if (!service.startTun2Socks(configFile.absolutePath, tunFd)) {
+                Log.e(TAG, "Failed to start tun2socks via TProxyService")
+                return false
+            }
             hevService = service
             true
         } catch (e: UnsatisfiedLinkError) {

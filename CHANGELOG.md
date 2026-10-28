@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.2.0]
+
+### Chore
+- Update paqet submodule to v1.0.0-alpha.21 (wire framing, UDP decoupled writes, socket & buffer optimizations, native SOCKS5 server, binary wire protocol)
+- Update hev-socks5-tunnel submodule to v2.19.3+ (ICMP Echo, tunnel offloads, idle memory release, JNI status APIs, stability fixes)
+- Update build tooling and dependencies
+- Target Android API 37
+
+### Fix
+- Fix Save button text color in config editor
+
 ## [v1.1.0]
 
 ### Chore

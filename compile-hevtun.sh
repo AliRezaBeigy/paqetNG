@@ -45,6 +45,7 @@ ln -s "$__dir/hev-socks5-tunnel" "$TMPDIR/jni/hev-socks5-tunnel"
 
 OUT="$__dir/app/src/main/jniLibs"
 mkdir -p "$OUT"
+find "$TMPDIR/libs" -type f ! -name "*.so" -delete
 cp -r "$TMPDIR/libs/"* "$OUT/"
 cleanup
 echo "Done. libs copied to $OUT"

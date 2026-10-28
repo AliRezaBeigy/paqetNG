@@ -46,3 +46,8 @@ foreach ($h in $coreHeaders) {
   $dst = Join-Path $coreBase "include\$h"
   if (Test-Path $src) { Get-Content $src -Raw | Set-Content $dst -NoNewline }
 }
+
+# hev-socks5-tunnel main header
+$mainSrc = Join-Path $hevtun "src\hev-main.h"
+$mainDst = Join-Path $hevtun "include\hev-socks5-tunnel.h"
+if (Test-Path $mainSrc) { Get-Content $mainSrc -Raw | Set-Content $mainDst -NoNewline }

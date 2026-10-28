@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Play Policy Insights (ForegroundServicesPolicy): advisory only. It fires on every
+         FOREGROUND_SERVICE* uses-permission when targetSdk >= 34, even when the manifest
+         already declares foregroundServiceType and PROPERTY_SPECIAL_USE_FGS_SUBTYPE.
+         Complete the Play Console declaration (App content > Foreground service permissions). -->
+    <issue id="ForegroundServicesPolicy" severity="ignore" />
+</lint>
